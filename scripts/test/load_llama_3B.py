@@ -2,7 +2,8 @@
 from transformers import pipeline
 
 messages = [
-    {"role": "user", "content": "Who are you?"},
+    # {"role": "user", "content": "Who are you?"},
+    {"role": "user", "content": "田田和维康是什么关系?"},
 ]
 
 kwargs = {'max_new_tokens': 96}

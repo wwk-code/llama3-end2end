@@ -17,6 +17,7 @@ import datasets
 import torch
 from build_dataset import build_instruction_dataset
 import transformers
+import time
 from transformers import (
     CONFIG_MAPPING,
     AutoConfig,
@@ -115,8 +116,6 @@ D:\\PycharmProject\\2024\\Chinese-LLaMA-Alpaca-3-main\\eval\\ruozhiba_qa2449_gpt
 '''
 
 
-
-
 @dataclass
 class ModelArguments:
     """
@@ -185,7 +184,7 @@ class ModelArguments:
             "choices": ["auto", "bfloat16", "float16", "float32"],
         },
     )
-    
+
     low_cpu_mem_usage: bool = field(
         default=False,
         metadata={
@@ -418,6 +417,8 @@ def main():
         quantization_config=quantization_config,
         attn_implementation="flash_attention_2" if training_args.use_flash_attention_2 else "sdpa"
     )
+
+
     if training_args.load_in_kbits in [4, 8]:
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=training_args.gradient_checkpointing)
     model.config.use_cache = False
