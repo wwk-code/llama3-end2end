@@ -2,4 +2,4 @@
 */.DS_Store
 scripts/training/output_dir/adapter_model.safetensors
 lora_output/adapter_model.safetensors
-lora_output/optimizer.pt
+lora_output/

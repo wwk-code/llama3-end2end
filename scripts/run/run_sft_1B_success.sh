@@ -8,7 +8,7 @@ python scripts/training/run_clm_sft_with_peft.py \
   --do_eval 1 \
   --seed 42 \
   --bf16 1 \
-  --num_train_epochs 1 \
+  --num_train_epochs 2 \
   --lr_scheduler_type cosine \
   --learning_rate 1e-4 \
   --warmup_ratio 0.05 \
@@ -20,14 +20,14 @@ python scripts/training/run_clm_sft_with_peft.py \
   --evaluation_strategy steps \
   --eval_steps 100 \
   --save_steps 200 \
-  --gradient_accumulation_steps 4 \
+  --gradient_accumulation_steps 8 \
   --preprocessing_num_workers 8 \
-  --max_seq_length 256 \
+  --max_seq_length 512 \
   --output_dir lora_output \
   --overwrite_output_dir 1 \
   --ddp_timeout 30000 \
   --logging_first_step True \
-  --lora_rank 16 \
+  --lora_rank 32 \
   --lora_alpha 128 \
   --trainable "q_proj,v_proj,k_proj,o_proj,gate_proj,down_proj,up_proj" \
   --lora_dropout 0.05 \

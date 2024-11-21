@@ -264,6 +264,9 @@ if __name__=='__main__':
             "fan_in_fan_out" : lora_config.fan_in_fan_out,
         })
     
+    import pdb
+    pdb.set_trace()
+    
     if not os.path.exists(base_model_path):
         print("Cannot find lora model on the disk. Downloading lora model from hub...")
         base_model_path = snapshot_download(repo_id=base_model_path)
