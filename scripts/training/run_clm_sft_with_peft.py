@@ -40,82 +40,6 @@ from peft import LoraConfig, TaskType, get_peft_model, PeftModel, prepare_model_
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.40.0")
 require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/language-modeling/requirements.txt")
-'''
---model_name_or_path
-D:\\PycharmProject\\2024\\llama-3-chinese-8b-instruct-v2
---tokenizer_name_or_path
-D:\\PycharmProject\\2024\\llama-3-chinese-8b-instruct-v2
---dataset_dir
-D:\\PycharmProject\\2024\\Chinese-LLaMA-Alpaca-3-main\\data
---per_device_train_batch_size
-1
---per_device_eval_batch_size
-1
---do_train
-1
---do_eval
-1
---seed
-42
---bf16
-1
---num_train_epochs
-3
---lr_scheduler_type
-cosine
---learning_rate
-1e-4
---warmup_ratio
-0.05
---weight_decay
-0.1
---logging_strategy
-steps
---logging_steps
-10
---save_strategy
-steps
---save_total_limit
-3
---evaluation_strategy
-steps
---eval_steps
-100
---save_steps
-200
---gradient_accumulation_steps
-8
---preprocessing_num_workers
-8
---max_seq_length
-1024
---output_dir
-D:\\PycharmProject\\2024\\llama3-lora
---overwrite_output_dir
-1
---ddp_timeout
-30000
---logging_first_step
-True
---lora_rank
-64
---lora_alpha
-128
---trainable
-"q_proj,v_proj,k_proj,o_proj,gate_proj,down_proj,up_proj"
---lora_dropout
-0.05
---modules_to_save
-"embed_tokens,lm_head"
---torch_dtype
-bfloat16
---validation_file
-D:\\PycharmProject\\2024\\Chinese-LLaMA-Alpaca-3-main\\eval\\ruozhiba_qa2449_gpt4turbo.json
---load_in_kbits
-16
-
-'''
-
 
 @dataclass
 class ModelArguments:
@@ -418,7 +342,6 @@ def main():
         attn_implementation="flash_attention_2" if training_args.use_flash_attention_2 else "sdpa"
     )
 
-
     if training_args.load_in_kbits in [4, 8]:
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=training_args.gradient_checkpointing)
     model.config.use_cache = False
@@ -451,6 +374,7 @@ def main():
                 lora_dropout=lora_dropout,
                 modules_to_save=modules_to_save)
             model = get_peft_model(model, peft_config)
+            
         model.print_trainable_parameters()
 
     # Initialize our Trainer
@@ -470,6 +394,7 @@ def main():
             checkpoint = training_args.resume_from_checkpoint
         elif last_checkpoint is not None:
             checkpoint = last_checkpoint
+        
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
