@@ -1,6 +1,9 @@
+huggingface_model_path='/root/.cache/huggingface/hub/models--meta-llama--Llama-3.2-1B/snapshots/4e20de362430cd3b72f300e6b0f18e50e7166e08'
+# huggingface_model_path='/data/workspace/.cache/huggingface/models--meta-llama--Llama-3.2-1B/snapshots/4e20de362430cd3b72f300e6b0f18e50e7166e08'
+
 python scripts/training/run_clm_sft_with_peft.py \
-  --model_name_or_path /data/workspace/.cache/huggingface/models--meta-llama--Llama-3.2-1B/snapshots/4e20de362430cd3b72f300e6b0f18e50e7166e08 \
-  --tokenizer_name_or_path /data/workspace/.cache/huggingface/models--meta-llama--Llama-3.2-1B/snapshots/4e20de362430cd3b72f300e6b0f18e50e7166e08 \
+  --model_name_or_path ${huggingface_model_path} \
+  --tokenizer_name_or_path ${huggingface_model_path} \
   --dataset_dir data \
   --per_device_train_batch_size 1 \
   --per_device_eval_batch_size 1 \

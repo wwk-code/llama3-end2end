@@ -30,6 +30,7 @@ from transformers import (
     set_seed,
     DataCollatorForSeq2Seq
 )
+
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
@@ -121,7 +122,6 @@ class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
     """
-
     model_name_or_path: Optional[str] = field(
         default=None,
         metadata={
