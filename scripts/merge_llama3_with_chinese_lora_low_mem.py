@@ -64,15 +64,22 @@ params_of_models = {
         },
 }
 
+# 根据 fan_in_fan_out 参数决定是否对权重矩阵 weight 转置。这在处理 LoRA 的权重合并时会用到，因为不同的架构可能有不同的权重排列方式。
 def transpose(weight, fan_in_fan_out):
     return weight.T if fan_in_fan_out else weight
 
+# 简单封装，用于加载 JSON 文件。脚本中用于读取基础模型的配置文件（config.json），获取模型层数等信息。
 def jsonload(filename):
     with open(filename, "r") as file:
         d = json.load(file)
     return d
 
-
+''''
+translate_state_dict_key(k)
+将基础模型的权重名称映射为目标权重名称。
+针对 Llama-3 和 LoRA 的权重命名差异进行转换。
+会过滤掉与旋转嵌入(rotary_emb)或 LoRA 特定的权重（如 lora_*）相关的键。
+'''
 # Borrowed and modified from https://github.com/tloen/alpaca-lora
 def translate_state_dict_key(k):
     k = k.replace("base_model.model.", "")
@@ -110,12 +117,24 @@ def translate_state_dict_key(k):
     else:
         print(k)
         raise NotImplementedError
-
+    
+'''
+unpermute(w)
+对权重矩阵 w 进行反置换操作。
+Llama 的权重有特殊排列方式（用于自注意力机制），需要在保存或合并时进行调整。
+'''
 def unpermute(w):
     return (
         w.view(n_heads, 2, dim // n_heads // 2, dim).transpose(1, 2).reshape(dim, dim)
     )
 
+'''
+5. save_shards(model_sd, num_shards, prefix="", verbose=False)
+将权重保存为分片格式。
+若模型有多个分片（num_shards > 1），会按需拆分权重，并存储到单独的文件中。
+特别针对 Hugging Face 和 Llama 权重格式的差异，重新排列键和值。
+垃圾回收（gc.collect()）用于释放内存，防止大模型操作过程中耗尽内存。
+'''
 def save_shards(model_sd, num_shards: int, prefix="", verbose=False):
     """
     Convert and save the HF format weights to PTH format weights
@@ -192,7 +211,12 @@ def save_shards(model_sd, num_shards: int, prefix="", verbose=False):
                 print(f"Saving shard {i+1} of {num_shards} into {output_dir}/{prefix}consolidated.0{i}.pth")
                 torch.save(new_state_dict, output_dir + f"/{prefix}consolidated.0{i}.pth")
 
-
+'''
+merge_shards(output_dir, num_shards)
+合并模型的权重分片。
+将多分片的 .pth 权重文件加载到内存中，合并为单个权重字典，并重新保存。
+在合并完成后，会清理中间的分片文件。
+'''
 def merge_shards(output_dir, num_shards: int):
     ckpt_filenames = sorted([f for f in os.listdir(output_dir) if re.match('L(\d+)-consolidated.(\d+).pth',f)])
 
@@ -264,20 +288,23 @@ if __name__=='__main__':
             "fan_in_fan_out" : lora_config.fan_in_fan_out,
         })
     
-    import pdb
-    pdb.set_trace()
+    # import pdb
+    # pdb.set_trace()
     
-    if not os.path.exists(base_model_path):
-        print("Cannot find lora model on the disk. Downloading lora model from hub...")
-        base_model_path = snapshot_download(repo_id=base_model_path)
-    if os.path.exists(os.path.join(base_model_path, "pytorch_model.bin")):
-        ckpt_filenames = ["pytorch_model.bin"]
-    elif os.path.exists(os.path.join(base_model_path, "model.safetensors.index.json")):
-        ckpt_filenames = sorted([f for f in os.listdir(base_model_path) if re.match('model-(\d+)-of-(\d+).safetensors',f)])
-    elif os.path.exists(os.path.join(base_model_path, "pytorch_model.index.json")):
-        ckpt_filenames = sorted([f for f in os.listdir(base_model_path) if re.match('pytorch_model-(\d+)-of-(\d+).bin',f)])
-    if len(ckpt_filenames) == 0:
-        raise FileNotFoundError(f"Cannot find base model checkpoints in ${base_model_path}. Please make sure the checkpoints are saved in the HF format.")
+    ckpt_filenames = ["model.safetensors"]
+    
+    # if not os.path.exists(base_model_path):
+    #     print("Cannot find lora model on the disk. Downloading lora model from hub...")
+    #     base_model_path = snapshot_download(repo_id=base_model_path)
+    # if os.path.exists(os.path.join(base_model_path, "pytorch_model.bin")):
+    #     ckpt_filenames = ["pytorch_model.bin"]
+    # elif os.path.exists(os.path.join(base_model_path, "model.safetensors.index.json")):
+    #     ckpt_filenames = sorted([f for f in os.listdir(base_model_path) if re.match('model-(\d+)-of-(\d+).safetensors',f)])
+    # elif os.path.exists(os.path.join(base_model_path, "pytorch_model.index.json")):
+    #     ckpt_filenames = sorted([f for f in os.listdir(base_model_path) if re.match('pytorch_model-(\d+)-of-(\d+).bin',f)])
+    # if len(ckpt_filenames) == 0:
+    #     raise FileNotFoundError(f"Cannot find base model checkpoints in ${base_model_path}. Please make sure the checkpoints are saved in the HF format.")
+    
     layers = jsonload(os.path.join(base_model_path, "config.json"))["num_hidden_layers"]
     model_size = None
     total_size = 0
