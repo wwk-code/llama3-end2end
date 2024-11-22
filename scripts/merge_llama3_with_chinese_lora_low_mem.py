@@ -41,6 +41,7 @@ WEIGHTS_NAME = "adapter_model.bin"
 SAFETENSORS_WEIGHTS_NAME = "adapter_model.safetensors"
 
 layers_to_model_size = {
+    16 : '1B',
     32 : '8B',
     80 : '70B',
 }
@@ -329,7 +330,7 @@ if __name__=='__main__':
         print("Merging...")
         for k in state_dict:
             for tl_idx, t_and_l in enumerate(tokenizers_and_loras):
-                saved_key = 'base_model.model.'+k
+                saved_key = 'base_model.model.' + k
                 lora_key_A = saved_key.replace('.weight','.lora_A.weight')
                 if saved_key in t_and_l['state_dict']:
                     if args.verbose:
@@ -371,7 +372,7 @@ if __name__=='__main__':
 
     if output_type=='huggingface':
         configs = ('config.json', 'generation_config.json', 'pytorch_model.bin.index.json', "model.safetensors.index.json")
-        if model_size == "1.3B":
+        if model_size == "1.3B" or  model_size == "1B":
             configs = ('config.json', 'generation_config.json')
         for config in configs:
             if os.path.exists(os.path.join(lora_model_path, config)):
